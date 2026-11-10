@@ -30,11 +30,11 @@ lock = threading.Lock()
 last_request = 0.0
 
 
-def fetch(url, headers=None, html=False):
+def fetch(url, headers=None, html=False, min_interval=.22):
     global last_request
     for attempt in range(3):
         with lock:
-            time.sleep(max(0, .22 - (time.monotonic() - last_request)))
+            time.sleep(max(0, min_interval - (time.monotonic() - last_request)))
             last_request = time.monotonic()
         try:
             with urlopen(Request(url, headers={"User-Agent": UA, **(headers or {})}),
@@ -94,13 +94,15 @@ def roster_page(source, index):
     return candidates[0]
 
 
-def universe():
+def universe(lookup_ciks=True):
     sp, ndx = parallel(lambda args: roster_page(*args), [(SP, "S&P 500"), (NDX, "Nasdaq-100")])
     for ticker, item in ndx.items():
         if ticker in sp:
             sp[ticker]["indexes"] += item["indexes"]
         else:
             sp[ticker] = item
+    if not lookup_ciks:
+        return sp
     seed = json.loads((ROOT / "sec_ticker_seed.json").read_text())
     mapping = seed["tickers"].copy()
     try:
@@ -315,6 +317,41 @@ def alpaca_prices(universe_rows, cal, session):
     return output
 
 
+def massive_prices(members, calendar, session, key):
+    """Request one split-adjusted daily summary per session on Stocks Basic."""
+    start = dt.date.fromisoformat(session) - dt.timedelta(days=400)
+    sessions = calendar.sessions_in_range(start.isoformat(), session)
+    history = {ticker: [] for ticker in members}
+    symbols = {ticker.replace("-", "."): ticker for ticker in members}
+    print(f"Fetching {len(sessions)} trading sessions at up to 5 requests per minute.", flush=True)
+    for index, day in enumerate(reversed(sessions), start=1):
+        date = day.date().isoformat()
+        data = fetch(f"https://api.massive.com/v2/aggs/grouped/locale/us/market/stocks/{date}?adjusted=true",
+                     {"Authorization": f"Bearer {key}"}, min_interval=12.2)
+        if data.get("status") != "OK" or data.get("adjusted") is not True or not data.get("results"):
+            raise ValueError(f"Missing or invalid Massive daily summary for {date}")
+        for bar in data["results"]:
+            ticker = symbols.get(bar["T"])
+            if ticker:
+                timestamp = dt.datetime.fromtimestamp(bar["t"] / 1000, ET)
+                if timestamp.date() != day.date():
+                    raise ValueError(f"Massive returned an unexpected date for {ticker}: {date}")
+                history[ticker].append({**bar, "t": timestamp.isoformat()})
+        if index == 1:
+            missing = [ticker for ticker, bars in history.items() if not bars]
+            if missing:
+                raise ValueError("Missing latest Massive bars: " + ", ".join(sorted(missing)))
+        if index % 25 == 0 or index == len(sessions):
+            print(f"Fetched {index}/{len(sessions)} sessions.", flush=True)
+    results = {}
+    for ticker, bars in history.items():
+        try:
+            results[ticker] = prices_from_bars(bars, calendar, session)
+        except ValueError as error:
+            raise ValueError(f"{ticker}: {error}") from None
+    return results
+
+
 def write_json(path, content):
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(content, ensure_ascii=False, separators=(",", ":"), allow_nan=False) + "\n")
@@ -351,25 +388,48 @@ def main():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("mode", choices=["public", "private"])
     cli.add_argument("--latest", action="store_true", help="Use the latest closed session with the roster observed today")
+    cli.add_argument("--prices-only", action="store_true", help="Run a private price scan without SEC research")
+    cli.add_argument("--provider", choices=["alpaca", "massive"], help="Price provider for private mode")
     args = cli.parse_args()
-    session = session_info(latest=args.latest)
+    if args.provider and args.mode != "private":
+        cli.error("--provider requires private mode")
+    if args.prices_only and args.mode != "private":
+        cli.error("--prices-only requires private mode")
+    key = None
+    if args.provider == "massive":
+        key = os.getenv("MASSIVE_API_KEY")
+        if not key:
+            raise ValueError("Set MASSIVE_API_KEY locally before running the private scan.")
+        now = dt.datetime.now(ET)
+        yesterday = (now.date() - dt.timedelta(days=1)).isoformat()
+        session = session_info(date=yesterday, now=now, latest=True)
+    else:
+        session = session_info(latest=args.latest)
     if session is None:
         print("No regular US trading session today")
         return
     calendar, date = session
     directory = ROOT / ("site/data" if args.mode == "public" else ".private/data")
-    if (directory / f"{date}.json").exists():
+    existing = directory / f"{date}.json"
+    if existing.exists() and (args.prices_only or not json.loads(existing.read_text()).get("pricesOnly")):
         write_json(directory / "index.json", sorted((x.stem for x in directory.glob("????-??-??.json")), reverse=True))
         print(f"Verified {args.mode} report already exists for {date}")
         return
-    members = universe()
+    members = universe(lookup_ciks=not args.prices_only)
     if args.mode == "private":
-        if os.getenv("APCA_PERSONAL_USE") != "yes":
-            raise ValueError("Confirm the Alpaca feed entitlement and regular-session conventions before enabling private prices. See SETUP.md.")
-        data = alpaca_prices(members, calendar, date)
-        rows = parallel(lambda item: report_row(item, date, data[item["ticker"]]) if data[item["ticker"]]["qualified"]
-                        else {**item, **data[item["ticker"]], "series": [], "filings": []}, members.values())
-        parallel(lambda row: enrich(row, date), [row for row in rows if row["qualified"]])
+        if args.provider == "massive":
+            data = massive_prices(members, calendar, date, key)
+        else:
+            if os.getenv("APCA_PERSONAL_USE") != "yes":
+                raise ValueError("Confirm the Alpaca feed entitlement and regular-session conventions before enabling private prices. See SETUP.md.")
+            data = alpaca_prices(members, calendar, date)
+        rows = parallel(lambda item: report_row(item, date, data[item["ticker"]]) if not args.prices_only and data[item["ticker"]]["qualified"]
+                        else {**item, **data[item["ticker"]], "filings": []}, members.values())
+        if not args.prices_only:
+            parallel(lambda row: enrich(row, date), [row for row in rows if row["qualified"]])
+        for row in rows:
+            if not row["qualified"]:
+                row["series"] = []
     else:
         rows = parallel(lambda item: report_row(item, date), members.values())
         recent = sorted((row for row in rows if row["filings"] and row["cik"]),
@@ -378,9 +438,17 @@ def main():
         recent.sort(key=lambda row: not any(f["form"] in {"10-K", "10-Q", "20-F", "40-F"} for f in row["filings"]))
         parallel(lambda row: enrich(row, date), recent[:15])
     archive(directory, {"date": date, "mode": args.mode, "updated": dt.datetime.now(ET).isoformat(),
-                        "rows": rows, "rosterObserved": dt.datetime.now(ET).date().isoformat(), "spCount": sum("S&P 500" in x["indexes"] for x in rows),
+                        "rows": rows, "pricesOnly": args.prices_only,
+                        "priceProvider": (args.provider or "alpaca") if args.mode == "private" else None, "rosterObserved": dt.datetime.now(ET).date().isoformat(), "spCount": sum("S&P 500" in x["indexes"] for x in rows),
                         "ndxCount": sum("Nasdaq-100" in x["indexes"] for x in rows)}, calendar)
     print(f"Verified {args.mode} report for {date}: {len(rows)} securities")
+    if args.mode == "private":
+        qualifying = sorted((row for row in rows if row["qualified"]), key=lambda row: (row["percent"], row["ticker"]))
+        print(f"{len(qualifying)} stocks qualified.")
+        for row in qualifying[:10]:
+            print(f"{row['ticker']:6}  close ${row['close']:,.2f}  low ${row['low']:,.2f}  "
+                  f"${row['dollars']:,.2f} / {row['percent']:.2f}% above low")
+        print(f"Full report: {directory / (date + '.json')}")
 
 
 if __name__ == "__main__":
