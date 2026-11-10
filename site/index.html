@@ -11,18 +11,18 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--accent)}header{background:#102642;color:#eef5ff;border-bottom:3px solid #4a83cf}
 .wrap{width:min(1450px,100%);margin:auto;padding:20px clamp(16px,4vw,52px)}.mast,.line,.filters,.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.mast,.line{justify-content:space-between}.brand{font-size:1.32rem;font-weight:700}.eyebrow,.overline{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.overline{color:var(--muted)}.eyebrow{color:#b3cce9}
 h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.06;margin:.28em 0 .2em}h2{font-size:1.28rem;margin:0 0 12px}h3{margin:1em 0 .45em}p{line-height:1.45}button,input,select{font:inherit}button,select,input[type=search]{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:8px 11px}button{cursor:pointer}button:hover,button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:var(--tag)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}nav{padding-top:15px;display:flex;gap:8px;flex-wrap:wrap}nav button,#theme{background:#173454;color:#e8f2ff;border-color:#57799e}nav button[aria-pressed=true]{background:#e6f1ff;color:#163b66}
-.panel,.stat,.notice{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:17px}.notice{margin:16px 0;color:var(--muted)}.notice.demo{background:var(--warn);color:var(--warn-ink);border-color:transparent}.muted,small{color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:15px 0}.stat strong{display:block;font-size:1.6rem;margin-top:7px;font-variant-numeric:tabular-nums}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{background:var(--tag);border-radius:5px;color:var(--accent);font-size:.8rem;padding:2px 6px;white-space:nowrap}.positive{color:var(--green)}.filters{margin:12px 0}.filters label{display:grid;gap:3px;font-size:.82rem;color:var(--muted)}.filters .check{display:flex;align-items:center;align-self:end;min-height:36px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top}th{white-space:nowrap;font-size:.82rem;color:var(--muted)}th button,.link{color:var(--accent);font-weight:700;background:none;border:0;padding:0;text-align:left}.num{text-align:right;white-space:nowrap}.cellname{display:block;min-width:140px}.chart{width:100%;height:125px;color:var(--accent);background:var(--bg);border-radius:8px}.short{margin:5px 0}.list{margin:0;padding-left:20px}.list li{margin:6px 0}dialog{width:min(810px,calc(100% - 24px));max-height:88vh;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:22px}dialog::backdrop{background:#061223ad}footer{border-top:1px solid var(--line);margin-top:20px;font-size:.88rem}#fileInput{max-width:100%}.hide{display:none!important}@media(max-width:700px){.split{grid-template-columns:1fr}.wrap{padding:16px}.panel{padding:12px}.filters label{flex:1 1 125px}.filters input,.filters select{width:100%}.filters .check input{width:auto}}
+.panel,.stat,.notice{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:17px}.notice{margin:16px 0;color:var(--muted)}.muted,small{color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:15px 0}.stat strong{display:block;font-size:1.6rem;margin-top:7px;font-variant-numeric:tabular-nums}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{background:var(--tag);border-radius:5px;color:var(--accent);font-size:.8rem;padding:2px 6px;white-space:nowrap}.positive{color:var(--green)}.filters{margin:12px 0}.filters label{display:grid;gap:3px;font-size:.82rem;color:var(--muted)}.filters .check{display:flex;align-items:center;align-self:end;min-height:36px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top}th{white-space:nowrap;font-size:.82rem;color:var(--muted)}th button,.link{color:var(--accent);font-weight:700;background:none;border:0;padding:0;text-align:left}.num{text-align:right;white-space:nowrap}.cellname{display:block;min-width:140px}.chart{width:100%;height:125px;color:var(--accent);background:var(--bg);border-radius:8px}.short{margin:5px 0}.list{margin:0;padding-left:20px}.list li{margin:6px 0}dialog{width:min(810px,calc(100% - 24px));max-height:88vh;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:22px}dialog::backdrop{background:#061223ad}footer{border-top:1px solid var(--line);margin-top:20px;font-size:.88rem}#fileInput{max-width:100%}.hide{display:none!important}@media(max-width:700px){.split{grid-template-columns:1fr}.wrap{padding:16px}.panel{padding:12px}.filters label{flex:1 1 125px}.filters input,.filters select{width:100%}.filters .check input{width:auto}}
 </style>
 </head>
 <body>
 <header><div class="wrap">
 <div class="mast"><div><div class="eyebrow">U.S. equities · end of day</div><div class="brand">Market Low Monitor</div></div><button id="theme" type="button">Dark mode</button></div>
-<nav aria-label="Dashboard views"><button data-view="public">SEC research</button><button data-view="demo">Screening demo</button><button data-view="private">Private reports</button></nav>
+<nav aria-label="Dashboard views"><button data-view="public">SEC research</button><button data-view="private">Open a scan file</button></nav>
 </div></header>
 <main class="wrap">
 <div class="line"><div><div class="overline" id="modeLabel">Research workspace</div><h1 id="title">SEC research</h1></div><label id="archiveLabel">Report session <select id="archive"></select></label></div>
 <div id="notice" class="notice" role="status"></div>
-<div id="import" class="panel hide"><p class="short">Open one or more JSON reports from the private scanner’s <code>.private/data</code> folder. Files are read in this tab and are never uploaded. Reports clear when this page reloads.</p><label for="fileInput">Private report files</label> <input id="fileInput" type="file" accept=".json,application/json" multiple></div>
+<div id="import" class="panel hide"><p class="short">Already ran the stock scanner on your computer? Choose the report it saved in <code>.private/data</code>. This page opens the file in your browser. The report stays on your device and clears when you reload.</p><label for="fileInput">Choose scan files</label> <input id="fileInput" type="file" accept=".json,application/json" multiple></div>
 <div id="dashboard" class="hide">
 <section id="stats" class="stats" aria-label="Report totals"></section>
 <div class="split"><section class="panel"><h2 id="topTitle">Research queue</h2><div id="top"></div></section><section class="panel"><h2>Session notes</h2><div id="notes"></div></section></div>
@@ -57,34 +57,8 @@ $("theme").onclick=()=>{theme=theme==="dark"?"light":"dark";safeWrite("mlm-theme
 applyTheme();
 const watched = new Set(safeRead("mlm-watchlist",[]));
 const storedPrivate = new Map();
-const demoDates=["2024-05-14","2024-05-13"];
-const demoCompanies=[
- ["EXM-A","Example Aerospace","Industrials","Aerospace",42.18,40, "High",["S&P 500"]],
- ["EXM-B","Example Biotech","Health Care","Biotechnology",16.20,10, "Low",["Nasdaq-100"]],
- ["EXM-C","Example Computing","Information Technology","Hardware",275.25,250.75,"Medium",["S&P 500","Nasdaq-100"]],
- ["EXM-D","Example Digital","Communication Services","Media",68,62,"Medium",["Nasdaq-100"]],
- ["EXM-E","Example Energy","Energy","Energy",31.80,31.80,"Insufficient Information",["S&P 500"]],
- ["EXM-F","Example Foods","Consumer Staples","Food products",88,50,"High",["S&P 500"]],
- ["EXM-G","Example Grid","Utilities","Electric utilities",65,55,"High",["S&P 500"]]
-];
-function demo(day){
- const latest=day===demoDates[0];
- const rows=demoCompanies.map(([ticker,name,sector,industry,close,low,priority,indexes],i)=>{
-  if(!latest&&i===3) close=76;
-  if(!latest&&i===5) close=59;
-  const dollars=close-low, gap=dollars/low*100;
-  return {ticker,name,sector,industry,close,low,high:close*1.28,lowDate:day,dollars,percent:gap,priority,indexes,
-   dollarTest:dollars<=10,percentTest:gap<=10,qualified:dollars<=10||gap<=10,
-   fresh:latest&&i===4,new:latest&&i===3,updated:day,returns:{"1D":-1.1,"5D":-2.8,"1M":-5.4,"3M":-7.5,"6M":-11.7,"1Y":-14.2},
-   series:[1.24,1.21,1.22,1.13,1.17,1.08,1.04,1].map((factor,n)=>[String(n),close*factor]),
-   filings:[],observations:["Illustrative observation for a fictional company."],
-   outlook:["Example follow-up: compare revenue and operating cash flow in the next filing."]};
- });
- return {mode:"demo",date:day,updated:day+"T18:42:00-04:00",rows,comparable:latest,
-  new:latest?["EXM-D"]:[],exited:latest?["EXM-F"]:[],removed:[],researchChanges:[]};
-}
 let view="public", active=null, sortKey="ticker", direction=1, request=0;
-let datesByView={public:[],demo:demoDates,private:[]};
+let datesByView={public:[],private:[]};
 const dataCache=new Map();
 const columns=[["ticker","Ticker"],["name","Company"],["indexes","Index"],["sector","Sector"],["close","Close"],["low","52-week low"],["dollars","Above low"],["percent","Above low %"],["marketCap","Market cap"],["priority","Priority"],["updated","Research date"]];
 const numeric=new Set(["close","low","dollars","percent","marketCap"]);
@@ -98,13 +72,13 @@ function columnValue(row,key){
  if(key==="marketCap")return Number.isFinite(row.marketCap)?money(row.marketCap):"—";
  return row[key]||"—";
 }
-function note(message,demonstration=false){$("notice").textContent=message;$("notice").classList.toggle("demo",demonstration);}
+function note(message){$("notice").textContent=message;}
 async function json(path){const response=await fetch(path,{cache:"no-store"});if(!response.ok)throw Error("Report could not be loaded");return response.json();}
 async function loadView(next){
  view=next; active=null;
  document.querySelectorAll("nav button").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===view)));
- $("modeLabel").textContent=next==="public"?"Public filing intelligence":next==="demo"?"Fictional data · interface test":"Local personal research";
- $("title").textContent=next==="public"?"SEC research":next==="demo"?"52-week low screener":"Private reports";
+ $("modeLabel").textContent=next==="public"?"Public company filings":"Results from your computer";
+ $("title").textContent=next==="public"?"SEC research":"Open a scan file";
  $("import").classList.toggle("hide",next!=="private");
  $("dashboard").classList.add("hide");
  $("search").value="";$("index").value="";$("priority").value="";$("screen").value="qualified";
@@ -118,7 +92,7 @@ async function loadView(next){
  if(token!==request)return;
  setDates();
  if(datesByView[view].length) await openReport(datesByView[view][0]);
- else note(next==="public"?"No verified SEC report has been published yet. Public market prices require a source that permits redistribution.":"Open a private report to see verified market prices and screening results.");
+ else note(next==="public"?"No verified SEC report has been published yet. Public market prices require a source that permits redistribution.":"This page displays results from a scan you ran yourself. It does not download stock prices or run a scan.");
 }
 function setDates(){
  const dates=datesByView[view];
@@ -129,12 +103,12 @@ async function openReport(day){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;
  const token=++request;
  try{
-  let result=view==="demo"?demo(day):view==="private"?storedPrivate.get(day):dataCache.get(day);
+  let result=view==="private"?storedPrivate.get(day):dataCache.get(day);
   if(!result&&view==="public"){result=await json("./data/"+day+".json");dataCache.set(day,result);}
   if(token!==request)return;
   if(!result||result.mode!==view||result.date!==day||!Array.isArray(result.rows))throw Error("Invalid report");
   active=result;$("archive").value=day;renderReport();
- }catch{if(token===request)note("This report could not be loaded. The previous report stays visible if available.",view==="demo");}
+ }catch{if(token===request)note("This report could not be loaded. The previous report stays visible if available.");}
 }
 $("archive").onchange=event=>openReport(event.target.value);
 function filterRows(){
@@ -184,8 +158,8 @@ function renderReport(){
  [["Securities screened",active.rows.length],["Qualified",qualified.length],["New qualifiers",active.comparable?active.new.length:"—"],["Fresh lows",qualified.filter(row=>row.fresh).length]];
  $("stats").innerHTML=counts.map(([label,value])=>'<div class="stat"><span class="overline">'+label+"</span><strong>"+(typeof value==="number"?num(value):escapeHtml(value))+"</strong></div>").join("");
  const stamp=new Date(active.updated).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"});
- note((view==="demo"?"Demonstration only. Every company and price in this report is fictional. ":view==="public"?"Public SEC filing activity and reported financial facts. The public report excludes licensed quote data. ":"Private data loaded locally. ")+
- "Report session "+dateLabel(active.date)+" · verified update "+stamp+" ET.",view==="demo");
+ note((view==="public"?"This report covers SEC filings and company financials. For current prices, open a company and follow its Yahoo Finance link. ":active.pricesOnly?"Price scan from your computer. SEC research was skipped for this scan. ":"Price scan and SEC research from your computer. ")+
+ "Report session "+dateLabel(active.date)+" · verified update "+stamp+" ET.");
  $("topTitle").textContent=view==="public"?"Recent filings to review":"Top five research priorities";
  $("tableTitle").textContent=view==="public"?"Company directory":"Screening results";
  const top=(view==="public"?withFilings.slice().sort((a,b)=>b.filings[0].filed.localeCompare(a.filings[0].filed)):
@@ -214,10 +188,11 @@ function showDetail(row){
  const metrics=Object.entries(row.metrics||{});
  const value=(key,n)=>key==="Operating margin"?percent(n):key==="Current ratio"?num(n):money(n);
  const list=items=>'<ul class="list">'+items.map(item=>"<li>"+escapeHtml(item)+"</li>").join("")+"</ul>";
- const comparisons=(view==="demo"?demoDates.map(demo):view==="private"?[...storedPrivate.values()]:[...dataCache.values()])
+ const comparisons=(view==="private"?[...storedPrivate.values()]:[...dataCache.values()])
  .filter(report=>report.date!==active.date).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10)
  .map(report=>[report,report.rows.find(item=>item.ticker===row.ticker)]).filter(pair=>pair[1]);
  $("detailBody").innerHTML='<p>'+escapeHtml((row.indexes||[]).join(" · "))+" · "+escapeHtml(row.sector||"Sector unavailable")+(row.industry?" · "+escapeHtml(row.industry):"")+"</p>"+
+ '<p><a href="https://finance.yahoo.com/quote/'+encodeURIComponent(row.ticker)+'/" target="_blank" rel="noopener">View price and 52-week range on Yahoo Finance</a></p>'+
  (row.cik?'<p><a href="https://www.sec.gov/edgar/browse/?CIK='+encodeURIComponent(row.cik)+'" target="_blank" rel="noopener">Company filings and business overview</a></p>':"")+
  (view!=="public"?'<h3>Regular-session price</h3><p>'+dateLabel(active.date)+" · Close "+money(row.close)+" · 52-week low "+money(row.low)+" ("+escapeHtml(row.lowDate)+") · High "+money(row.high)+" · "+money(row.dollars)+" / "+percent(row.percent)+" above the low.</p>"+
  '<p class="muted">'+(row.dollarTest&&row.percentTest?"Both thresholds met.":row.dollarTest?"Dollar threshold met.":row.percentTest?"Percentage threshold met.":"Outside both thresholds.")+(row.shortHistory?" Available price history is shorter than 52 weeks.":"")+"</p>"+chart(row.series)+
