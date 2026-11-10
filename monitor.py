@@ -101,8 +101,13 @@ def universe():
             sp[ticker]["indexes"] += item["indexes"]
         else:
             sp[ticker] = item
-    mapping = {item["ticker"].upper().replace(".", "-"): str(item["cik_str"])
-               for item in fetch(TICKERS).values()}
+    seed = json.loads((ROOT / "sec_ticker_seed.json").read_text())
+    mapping = seed["tickers"].copy()
+    try:
+        mapping.update({item["ticker"].upper().replace(".", "-"): str(item["cik_str"])
+                        for item in fetch(TICKERS).values()})
+    except RuntimeError as error:
+        print(f"{error}. Using the SEC ticker snapshot observed {seed['observed']} for Nasdaq-100 identifiers.", file=sys.stderr)
     for row in sp.values():
         row["cik"] = (row["cik"] or mapping.get(row["ticker"], "")).lstrip("0")
     if sum(not row["cik"] for row in sp.values()) > 5:
