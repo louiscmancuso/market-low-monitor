@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market Low Monitor</title>
+<meta name="description" content="An end-of-day market research dashboard for the S&P 500 and Nasdaq-100.">
+<style>
+:root{color-scheme:light dark;--bg:#f2f5fa;--panel:#fff;--ink:#132539;--muted:#52677e;--line:#d5deea;--accent:#1655a7;--tag:#e9f1fc;--warn:#fff2ce;--warn-ink:#634514;--green:#186854;font:16px Calibri,"Segoe UI",system-ui,sans-serif}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0c1623;--panel:#142234;--ink:#edf4ff;--muted:#afc0d4;--line:#2b4057;--accent:#9bc6ff;--tag:#203750;--warn:#3b3020;--warn-ink:#ffe4a3;--green:#83dfc1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--accent)}header{background:#102642;color:#eef5ff;border-bottom:3px solid #4a83cf}
+.wrap{width:min(1450px,100%);margin:auto;padding:20px clamp(16px,4vw,52px)}.mast,.line,.filters,.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.mast,.line{justify-content:space-between}.brand{font-size:1.32rem;font-weight:700}.eyebrow,.overline{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.overline{color:var(--muted)}.eyebrow{color:#b3cce9}
+h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.06;margin:.28em 0 .2em}h2{font-size:1.28rem;margin:0 0 12px}h3{margin:1em 0 .45em}p{line-height:1.45}button,input,select{font:inherit}button,select,input[type=search]{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:8px 11px}button{cursor:pointer}button:hover,button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:var(--tag)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}nav{padding-top:15px;display:flex;gap:8px;flex-wrap:wrap}nav button,#theme{background:#173454;color:#e8f2ff;border-color:#57799e}nav button[aria-pressed=true]{background:#e6f1ff;color:#163b66}
+.panel,.stat,.notice{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:17px}.notice{margin:16px 0;color:var(--muted)}.notice.demo{background:var(--warn);color:var(--warn-ink);border-color:transparent}.muted,small{color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:15px 0}.stat strong{display:block;font-size:1.6rem;margin-top:7px;font-variant-numeric:tabular-nums}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{background:var(--tag);border-radius:5px;color:var(--accent);font-size:.8rem;padding:2px 6px;white-space:nowrap}.positive{color:var(--green)}.filters{margin:12px 0}.filters label{display:grid;gap:3px;font-size:.82rem;color:var(--muted)}.filters .check{display:flex;align-items:center;align-self:end;min-height:36px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top}th{white-space:nowrap;font-size:.82rem;color:var(--muted)}th button,.link{color:var(--accent);font-weight:700;background:none;border:0;padding:0;text-align:left}.num{text-align:right;white-space:nowrap}.cellname{display:block;min-width:140px}.chart{width:100%;height:125px;color:var(--accent);background:var(--bg);border-radius:8px}.short{margin:5px 0}.list{margin:0;padding-left:20px}.list li{margin:6px 0}dialog{width:min(810px,calc(100% - 24px));max-height:88vh;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:22px}dialog::backdrop{background:#061223ad}footer{border-top:1px solid var(--line);margin-top:20px;font-size:.88rem}#fileInput{max-width:100%}.hide{display:none!important}@media(max-width:700px){.split{grid-template-columns:1fr}.wrap{padding:16px}.panel{padding:12px}.filters label{flex:1 1 125px}.filters input,.filters select{width:100%}.filters .check input{width:auto}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="mast"><div><div class="eyebrow">U.S. equities · end of day</div><div class="brand">Market Low Monitor</div></div><button id="theme" type="button">Dark mode</button></div>
+<nav aria-label="Dashboard views"><button data-view="public">SEC research</button><button data-view="demo">Screening demo</button><button data-view="private">Private reports</button></nav>
+</div></header>
+<main class="wrap">
+<div class="line"><div><div class="overline" id="modeLabel">Research workspace</div><h1 id="title">SEC research</h1></div><label id="archiveLabel">Report session <select id="archive"></select></label></div>
+<div id="notice" class="notice" role="status"></div>
+<div id="import" class="panel hide"><p class="short">Open one or more JSON reports from the private scanner’s <code>.private/data</code> folder. Files are read in this tab and are never uploaded. Reports clear when this page reloads.</p><label for="fileInput">Private report files</label> <input id="fileInput" type="file" accept=".json,application/json" multiple></div>
+<div id="dashboard" class="hide">
+<section id="stats" class="stats" aria-label="Report totals"></section>
+<div class="split"><section class="panel"><h2 id="topTitle">Research queue</h2><div id="top"></div></section><section class="panel"><h2>Session notes</h2><div id="notes"></div></section></div>
+<section class="panel"><div class="line"><div><div class="overline">S&P 500 + Nasdaq-100</div><h2 id="tableTitle">Company directory</h2></div><small id="count"></small></div>
+<div class="filters">
+<label>Find a company<input id="search" type="search" placeholder="Ticker or name"></label>
+<label>Index<select id="index"><option value="">All indexes</option><option>S&amp;P 500</option><option>Nasdaq-100</option></select></label>
+<label>Sector<select id="sector"><option value="">All sectors</option></select></label>
+<label>Priority<select id="priority"><option value="">All priorities</option><option>High</option><option>Medium</option><option>Low</option><option>Insufficient Information</option></select></label>
+<label id="screenFilter">Screen<select id="screen"><option value="qualified">All qualifiers</option><option value="all">All securities</option><option value="both">Both thresholds</option><option value="dollar">Dollar only</option><option value="percent">Percentage only</option><option value="new">New qualifiers</option><option value="fresh">Fresh lows</option></select></label>
+<label class="check"><input id="watched" type="checkbox"> Watchlist only</label>
+</div>
+<div class="scroll" tabindex="0" aria-label="Scrollable company table"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
+<p class="short"><small>Watchlists are saved in this browser and do not sync across devices.</small></p></section>
+</div></main>
+<dialog id="detail" aria-labelledby="detailTitle"><div class="line"><h2 id="detailTitle"></h2><form method="dialog"><button>Close</button></form></div><div id="detailBody"></div></dialog>
+<footer><div class="wrap"><p><a href="https://github.com/louiscmancuso/market-low-monitor/blob/main/RESEARCH_METHODOLOGY.md">Methodology</a> · <a href="https://www.sec.gov/search-filings/edgar-application-programming-interfaces">SEC EDGAR</a> · Constituents adapted from Wikipedia under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> from the <a href="https://en.wikipedia.org/wiki/List_of_S%26P_500_companies">S&amp;P 500</a> and <a href="https://en.wikipedia.org/wiki/Nasdaq-100">Nasdaq-100</a> lists. Research priorities are rule-based. Market capitalizations require a separate verified source.</p></div></footer>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const money = value => Number.isFinite(value) ? new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value) : "—";
+const num = value => Number.isFinite(value) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(value) : "—";
+const percent = value => Number.isFinite(value) ? num(value)+"%" : "—";
+const dateLabel = day => new Date(day+"T12:00:00Z").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"America/New_York"});
+const link = value => {try{const url=new URL(value); return url.protocol==="https:" ? escapeHtml(url.href) : "#";}catch{return "#";}};
+const safeRead = (key,fallback) => {try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;}};
+const safeWrite = (key,value) => {try{localStorage.setItem(key,JSON.stringify(value));}catch{}};
+let theme = safeRead("mlm-theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+function applyTheme(){document.documentElement.dataset.theme=theme;$("theme").textContent=theme==="dark"?"Light mode":"Dark mode";}
+$("theme").onclick=()=>{theme=theme==="dark"?"light":"dark";safeWrite("mlm-theme",theme);applyTheme();};
+applyTheme();
+const watched = new Set(safeRead("mlm-watchlist",[]));
+const storedPrivate = new Map();
+const demoDates=["2024-05-14","2024-05-13"];
+const demoCompanies=[
+ ["EXM-A","Example Aerospace","Industrials","Aerospace",42.18,40, "High",["S&P 500"]],
+ ["EXM-B","Example Biotech","Health Care","Biotechnology",16.20,10, "Low",["Nasdaq-100"]],
+ ["EXM-C","Example Computing","Information Technology","Hardware",275.25,250.75,"Medium",["S&P 500","Nasdaq-100"]],
+ ["EXM-D","Example Digital","Communication Services","Media",68,62,"Medium",["Nasdaq-100"]],
+ ["EXM-E","Example Energy","Energy","Energy",31.80,31.80,"Insufficient Information",["S&P 500"]],
+ ["EXM-F","Example Foods","Consumer Staples","Food products",88,50,"High",["S&P 500"]],
+ ["EXM-G","Example Grid","Utilities","Electric utilities",65,55,"High",["S&P 500"]]
+];
+function demo(day){
+ const latest=day===demoDates[0];
+ const rows=demoCompanies.map(([ticker,name,sector,industry,close,low,priority,indexes],i)=>{
+  if(!latest&&i===3) close=76;
+  if(!latest&&i===5) close=59;
+  const dollars=close-low, gap=dollars/low*100;
+  return {ticker,name,sector,industry,close,low,high:close*1.28,lowDate:day,dollars,percent:gap,priority,indexes,
+   dollarTest:dollars<=10,percentTest:gap<=10,qualified:dollars<=10||gap<=10,
+   fresh:latest&&i===4,new:latest&&i===3,updated:day,returns:{"1D":-1.1,"5D":-2.8,"1M":-5.4,"3M":-7.5,"6M":-11.7,"1Y":-14.2},
+   series:[1.24,1.21,1.22,1.13,1.17,1.08,1.04,1].map((factor,n)=>[String(n),close*factor]),
+   filings:[],observations:["Illustrative observation for a fictional company."],
+   outlook:["Example follow-up: compare revenue and operating cash flow in the next filing."]};
+ });
+ return {mode:"demo",date:day,updated:day+"T18:42:00-04:00",rows,comparable:latest,
+  new:latest?["EXM-D"]:[],exited:latest?["EXM-F"]:[],removed:[],researchChanges:[]};
+}
+let view="public", active=null, sortKey="ticker", direction=1, request=0;
+let datesByView={public:[],demo:demoDates,private:[]};
+const dataCache=new Map();
+const columns=[["ticker","Ticker"],["name","Company"],["indexes","Index"],["sector","Sector"],["close","Close"],["low","52-week low"],["dollars","Above low"],["percent","Above low %"],["marketCap","Market cap"],["priority","Priority"],["updated","Research date"]];
+const numeric=new Set(["close","low","dollars","percent","marketCap"]);
+const rank={"High":0,"Medium":1,"Low":2,"Insufficient Information":3};
+function priority(row){return row.priority||"Insufficient Information";}
+function columnValue(row,key){
+ if(key==="priority")return priority(row);
+ if(key==="indexes")return (row.indexes||[]).join(" · ");
+ if(key==="close"||key==="low"||key==="dollars")return money(row[key]);
+ if(key==="percent")return percent(row.percent);
+ if(key==="marketCap")return Number.isFinite(row.marketCap)?money(row.marketCap):"—";
+ return row[key]||"—";
+}
+function note(message,demonstration=false){$("notice").textContent=message;$("notice").classList.toggle("demo",demonstration);}
+async function json(path){const response=await fetch(path,{cache:"no-store"});if(!response.ok)throw Error("Report could not be loaded");return response.json();}
+async function loadView(next){
+ view=next; active=null;
+ document.querySelectorAll("nav button").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===view)));
+ $("modeLabel").textContent=next==="public"?"Public filing intelligence":next==="demo"?"Fictional data · interface test":"Local personal research";
+ $("title").textContent=next==="public"?"SEC research":next==="demo"?"52-week low screener":"Private reports";
+ $("import").classList.toggle("hide",next!=="private");
+ $("dashboard").classList.add("hide");
+ $("search").value="";$("index").value="";$("priority").value="";$("screen").value="qualified";
+ sortKey=next==="public"?"ticker":"percent";direction=1;
+ const token=++request;
+ if(next==="public"){
+  note("Loading verified SEC research reports…");
+  try{const dates=await json("./data/index.json");if(!Array.isArray(dates))throw Error("Invalid archive");datesByView.public=dates;}
+  catch{if(token===request)note("The SEC archive could not be loaded. Try reloading this page.");return;}
+ }
+ if(token!==request)return;
+ setDates();
+ if(datesByView[view].length) await openReport(datesByView[view][0]);
+ else note(next==="public"?"No verified SEC report has been published yet. Public market prices require a source that permits redistribution.":"Open a private report to see verified market prices and screening results.");
+}
+function setDates(){
+ const dates=datesByView[view];
+ $("archiveLabel").classList.toggle("hide",!dates.length);
+ $("archive").replaceChildren(...dates.map(day=>new Option(dateLabel(day),day)));
+}
+async function openReport(day){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;
+ const token=++request;
+ try{
+  let result=view==="demo"?demo(day):view==="private"?storedPrivate.get(day):dataCache.get(day);
+  if(!result&&view==="public"){result=await json("./data/"+day+".json");dataCache.set(day,result);}
+  if(token!==request)return;
+  if(!result||result.mode!==view||result.date!==day||!Array.isArray(result.rows))throw Error("Invalid report");
+  active=result;$("archive").value=day;renderReport();
+ }catch{if(token===request)note("This report could not be loaded. The previous report stays visible if available.",view==="demo");}
+}
+$("archive").onchange=event=>openReport(event.target.value);
+function filterRows(){
+ const search=$("search").value.trim().toLowerCase(), screen=$("screen").value;
+ return active.rows.filter(row=>{
+  if(search&&!((row.ticker+" "+row.name).toLowerCase().includes(search)))return false;
+  if($("index").value&&!(row.indexes||[]).includes($("index").value))return false;
+  if($("sector").value&&row.sector!==$("sector").value)return false;
+  if($("priority").value&&priority(row)!==$("priority").value)return false;
+  if($("watched").checked&&!watched.has(row.ticker))return false;
+  if(view==="public"||screen==="all")return true;
+  if(screen==="both")return row.dollarTest&&row.percentTest;
+  if(screen==="dollar")return row.dollarTest&&!row.percentTest;
+  if(screen==="percent")return row.percentTest&&!row.dollarTest;
+  return Boolean(row[screen]);
+ });
+}
+function compare(a,b){
+ if(numeric.has(sortKey)){
+  if(!Number.isFinite(a[sortKey]))return Number.isFinite(b[sortKey])?1:a.ticker.localeCompare(b.ticker);
+  if(!Number.isFinite(b[sortKey]))return -1;
+  return direction*(a[sortKey]-b[sortKey])||a.ticker.localeCompare(b.ticker);
+ }
+ if(sortKey==="priority")return direction*(rank[priority(a)]-rank[priority(b)])||a.ticker.localeCompare(b.ticker);
+ return direction*String(columnValue(a,sortKey)).localeCompare(String(columnValue(b,sortKey)))||a.ticker.localeCompare(b.ticker);
+}
+function tickerButton(row){return '<button type="button" class="link" data-ticker="'+escapeHtml(row.ticker)+'">'+escapeHtml(row.ticker)+'</button>';}
+function renderTable(){
+ if(!active)return;
+ const visible=columns.filter(([key])=>view!=="public"||!numeric.has(key));
+ $("head").innerHTML="<tr><th scope='col'>Watch</th>"+visible.map(([key,label])=>'<th scope="col"'+(sortKey===key?' aria-sort="'+(direction===1?"ascending":"descending")+'"':"")+' class="'+(numeric.has(key)?"num":"")+'"><button data-sort="'+key+'">'+label+"</button></th>").join("")+"</tr>";
+ const rows=filterRows().sort(compare);
+ $("count").textContent=num(rows.length)+" shown";
+ $("body").innerHTML=rows.length?rows.map(row=>'<tr><td><button type="button" data-watch="'+escapeHtml(row.ticker)+'" aria-pressed="'+watched.has(row.ticker)+'" aria-label="Watch '+escapeHtml(row.ticker)+'">'+(watched.has(row.ticker)?"★":"☆")+"</button></td>"+
+ visible.map(([key])=>'<td class="'+(numeric.has(key)?"num":"")+'">'+(key==="ticker"?tickerButton(row):key==="name"?'<span class="cellname">'+escapeHtml(row.name)+'</span>'+badges(row):escapeHtml(columnValue(row,key)))+"</td>").join("")+"</tr>").join(""):'<tr><td colspan="'+(visible.length+1)+'">No companies match these filters.</td></tr>';
+}
+function badges(row){const tags=[row.new?"New":"",row.fresh?"Fresh low":"",row.shortHistory?"Short history":""].filter(Boolean);return tags.length?'<span class="tags">'+tags.map(tag=>'<span class="tag">'+tag+'</span>').join("")+'</span>':"";}
+function renderReport(){
+ $("dashboard").classList.remove("hide");
+ $("screenFilter").classList.toggle("hide",view==="public");
+ const previousSector=$("sector").value;
+ $("sector").replaceChildren(new Option("All sectors",""),...[...new Set(active.rows.map(row=>row.sector).filter(Boolean))].sort().map(sector=>new Option(sector)));
+ if([...$("sector").options].some(option=>option.value===previousSector))$("sector").value=previousSector;
+ const qualified=active.rows.filter(row=>row.qualified);
+ const withFilings=active.rows.filter(row=>row.filings?.length);
+ const counts=view==="public"?[["Securities monitored",active.rows.length],["S&P 500",active.spCount],["Nasdaq-100",active.ndxCount],["Recent filings",withFilings.length]]:
+ [["Securities screened",active.rows.length],["Qualified",qualified.length],["New qualifiers",active.comparable?active.new.length:"—"],["Fresh lows",qualified.filter(row=>row.fresh).length]];
+ $("stats").innerHTML=counts.map(([label,value])=>'<div class="stat"><span class="overline">'+label+"</span><strong>"+(typeof value==="number"?num(value):escapeHtml(value))+"</strong></div>").join("");
+ const stamp=new Date(active.updated).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"});
+ note((view==="demo"?"Demonstration only. Every company and price in this report is fictional. ":view==="public"?"Public SEC filing activity and reported financial facts. The public report excludes licensed quote data. ":"Private data loaded locally. ")+
+ "Report session "+dateLabel(active.date)+" · verified update "+stamp+" ET.",view==="demo");
+ $("topTitle").textContent=view==="public"?"Recent filings to review":"Top five research priorities";
+ $("tableTitle").textContent=view==="public"?"Company directory":"Screening results";
+ const top=(view==="public"?withFilings.slice().sort((a,b)=>b.filings[0].filed.localeCompare(a.filings[0].filed)):
+ qualified.slice().sort((a,b)=>rank[priority(a)]-rank[priority(b)]||(b.score??-1)-(a.score??-1)||a.percent-b.percent)).slice(0,5);
+ $("top").innerHTML=top.length?'<ol class="list">'+top.map(row=>"<li>"+tickerButton(row)+" · "+escapeHtml(row.name)+" <small>"+(view==="public"?escapeHtml(row.filings[0].form+" · "+row.filings[0].filed):escapeHtml(priority(row)+" · "+percent(row.percent)+" above low"))+"</small></li>").join("")+"</ol>":"<p class='short muted'>No entries for this session.</p>";
+ const sectors={};
+ for(const row of (view==="public"?withFilings:qualified)){if(row.sector)sectors[row.sector]=(sectors[row.sector]||0)+1;}
+ const leaders=Object.entries(sectors).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([sector,n])=>escapeHtml(sector)+" ("+n+")");
+ const tickers=values=>(values||[]).map(escapeHtml).join(", ")||"None";
+ $("notes").innerHTML='<p class="short">'+(leaders.length?(view==="public"?"Recent filing activity by sector: ":"Most qualifying securities by sector: ")+leaders.join(", "):"No sector concentration to report.")+"</p>"+
+ (active.comparable?(view==="public"?"":'<p class="short">New: '+tickers(active.new)+' · Exited: '+tickers(active.exited)+'</p>')+
+ '<p class="short">New filings: '+tickers(active.researchChanges)+'</p>':"<p class='short muted'>No comparable report for the immediately preceding session.</p>")+
+ ((active.removed||[]).length?'<p class="short">Removed from the universe: '+tickers(active.removed)+'</p>':"");
+ renderTable();
+}
+function chart(series){
+ const values=(series||[]).map(point=>point[1]).filter(Number.isFinite);
+ if(values.length<2)return "";
+ const min=Math.min(...values),max=Math.max(...values),range=max-min||1;
+ const points=values.map((value,index)=>[8+index/(values.length-1)*584,110-(value-min)/range*96].join(",")).join(" ");
+ return '<svg class="chart" viewBox="0 0 600 125" role="img" aria-label="Closing-price trend from '+escapeHtml(money(values[0]))+' to '+escapeHtml(money(values.at(-1)))+'"><polyline points="'+points+'" fill="none" stroke="currentColor" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>';
+}
+function showDetail(row){
+ $("detailTitle").textContent=row.name+" ("+row.ticker+")";
+ const filings=(row.filings||[]).map(filing=>'<li><a href="'+link(filing.url)+'" target="_blank" rel="noopener">'+escapeHtml(filing.form+" · "+filing.filed)+'</a>'+ (filing.items?" · SEC items "+escapeHtml(filing.items):"")+"</li>").join("");
+ const metrics=Object.entries(row.metrics||{});
+ const value=(key,n)=>key==="Operating margin"?percent(n):key==="Current ratio"?num(n):money(n);
+ const list=items=>'<ul class="list">'+items.map(item=>"<li>"+escapeHtml(item)+"</li>").join("")+"</ul>";
+ const comparisons=(view==="demo"?demoDates.map(demo):view==="private"?[...storedPrivate.values()]:[...dataCache.values()])
+ .filter(report=>report.date!==active.date).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10)
+ .map(report=>[report,report.rows.find(item=>item.ticker===row.ticker)]).filter(pair=>pair[1]);
+ $("detailBody").innerHTML='<p>'+escapeHtml((row.indexes||[]).join(" · "))+" · "+escapeHtml(row.sector||"Sector unavailable")+(row.industry?" · "+escapeHtml(row.industry):"")+"</p>"+
+ (row.cik?'<p><a href="https://www.sec.gov/edgar/browse/?CIK='+encodeURIComponent(row.cik)+'" target="_blank" rel="noopener">Company filings and business overview</a></p>':"")+
+ (view!=="public"?'<h3>Regular-session price</h3><p>'+dateLabel(active.date)+" · Close "+money(row.close)+" · 52-week low "+money(row.low)+" ("+escapeHtml(row.lowDate)+") · High "+money(row.high)+" · "+money(row.dollars)+" / "+percent(row.percent)+" above the low.</p>"+
+ '<p class="muted">'+(row.dollarTest&&row.percentTest?"Both thresholds met.":row.dollarTest?"Dollar threshold met.":row.percentTest?"Percentage threshold met.":"Outside both thresholds.")+(row.shortHistory?" Available price history is shorter than 52 weeks.":"")+"</p>"+chart(row.series)+
+ '<div class="tags">'+Object.entries(row.returns||{}).map(([key,n])=>'<span class="tag">'+escapeHtml(key+" "+percent(n))+'</span>').join("")+"</div>":"")+
+ "<h3>Verified filings</h3>"+(filings?'<ul class="list">'+filings+"</ul>":"<p>No recent filings are available in this report.</p>")+
+ "<h3>Rule-based financial observations</h3><p>Research priority: "+escapeHtml(priority(row))+(Number.isFinite(row.score)?" ("+row.score+"/4)":"")+".</p>"+
+ (row.observations?.length?list(row.observations):"<p>Comparable financial observations are unavailable.</p>")+
+ (metrics.length?'<div class="scroll"><table><thead><tr><th>Annual metric</th><th>Latest</th><th>Prior</th><th>Periods ended</th></tr></thead><tbody>'+metrics.map(([key,item])=>"<tr><td>"+escapeHtml(key)+"</td><td>"+value(key,item.value)+"</td><td>"+value(key,item.prior)+"</td><td>"+escapeHtml(item.end+" / "+item.prior_end)+"</td></tr>").join("")+"</tbody></table></div>":"")+
+ (metrics.length&&row.cik?'<p><a href="https://data.sec.gov/api/xbrl/companyfacts/CIK'+String(Number(row.cik)).padStart(10,"0")+'.json">SEC company facts behind these calculations</a></p>':"")+
+ "<h3>Possible drivers and outlook</h3><p>These filings and financial trends offer leads for research. The automated report has no verified attribution for price moves or independently verified management forecast.</p>"+
+ list(row.outlook||["Check the next earnings release and filings for current guidance, risks and catalysts."])+
+ (comparisons.length?"<h3>Other loaded reports</h3>"+list(comparisons.map(([report,item])=>report.date+" · "+(view==="public"?priority(item)+" · "+(item.filings||[]).length+" recent filings":percent(item.percent)+" above low · "+priority(item)))):"");
+ $("detail").showModal();
+}
+document.querySelectorAll("nav button").forEach(button=>button.onclick=()=>loadView(button.dataset.view));
+for(const id of ["search","index","sector","priority","screen","watched"])$(id).addEventListener(id==="search"?"input":"change",renderTable);
+$("dashboard").addEventListener("click",event=>{
+ const button=event.target.closest("button");
+ if(!button||!active)return;
+ if(button.dataset.sort){direction=sortKey===button.dataset.sort?-direction:1;sortKey=button.dataset.sort;renderTable();$("head").querySelector('[data-sort="'+sortKey+'"]').focus();}
+ if(button.dataset.watch){const ticker=button.dataset.watch;if(watched.has(ticker))watched.delete(ticker);else watched.add(ticker);safeWrite("mlm-watchlist",[...watched]);renderTable();[...$("body").querySelectorAll("button[data-watch]")].find(item=>item.dataset.watch===ticker)?.focus();}
+ if(button.dataset.ticker){const row=active.rows.find(item=>item.ticker===button.dataset.ticker);if(row)showDetail(row);}
+});
+$("fileInput").onchange=async event=>{
+ let rejected=0;
+ for(const file of event.target.files){
+  try{
+   const report=JSON.parse(await file.text());
+   if(report.mode!=="private"||!/^\d{4}-\d{2}-\d{2}$/.test(report.date)||!Array.isArray(report.rows)||
+      !report.rows.every(row=>typeof row.ticker==="string"&&typeof row.name==="string"&&Array.isArray(row.filings)&&Array.isArray(row.indexes)))throw Error("Invalid file");
+   storedPrivate.set(report.date,report);
+  }catch{rejected++;}
+ }
+ datesByView.private=[...storedPrivate.keys()].sort().reverse();
+ setDates();
+ if(datesByView.private.length)await openReport(datesByView.private[0]);
+ if(rejected)note($("notice").textContent+" Rejected "+rejected+" invalid file(s).");
+};
+loadView("public");
+</script>
+</body></html>
