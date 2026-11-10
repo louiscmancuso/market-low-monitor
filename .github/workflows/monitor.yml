@@ -1,0 +1,77 @@
+name: Market Low Monitor
+on:
+  push:
+    branches: [main]
+    paths: [site/index.html, monitor.py, requirements.txt, .github/workflows/monitor.yml]
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: Refresh SEC data for the latest completed session
+        type: boolean
+        default: true
+  schedule:
+    - cron: '30 18 * * 1-5'
+      timezone: America/New_York
+    - cron: '20 19 * * 1-5'
+      timezone: America/New_York
+
+concurrency:
+  group: market-low-monitor-main
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main' && !github.event.repository.private
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        if: github.event_name == 'schedule' || inputs.refresh
+        with:
+          python-version: '3.12'
+      - name: Refresh SEC archive
+        if: github.event_name == 'schedule' || inputs.refresh
+        env:
+          SEC_CONTACT: ${{ vars.SEC_CONTACT || 'https://github.com/louiscmancuso/market-low-monitor/issues' }}
+        run: |
+          python -m pip install -r requirements.txt
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            python monitor.py public --latest
+          else
+            python monitor.py public
+          fi
+          git add site/data
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Archive verified SEC research report'
+            git push origin HEAD:main
+          fi
+      - name: Stage public files only
+        run: |
+          mkdir -p _site/data
+          cp site/index.html _site/
+          cp site/data/*.json _site/data/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+          retention-days: 1
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - name: Publish dashboard
+        id: pages
+        uses: actions/deploy-pages@v4
