@@ -1,2 +1,0 @@
-exchange-calendars>=4.10,<5
-beautifulsoup4>=4.13,<5
