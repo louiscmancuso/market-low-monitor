@@ -29,13 +29,21 @@ The computer must be online and awake. The scanner stops before publishing on so
 
 ## Private price scanner
 
-1. Clone this repository. Install Python 3.12, create a virtual environment, and install `requirements.txt`.
-2. If an existing Alpaca Basic paper/data account allows delayed SIP history for personal use, confirm the regular-session price convention, split adjustment and ticker coverage against known exchange closing prices before enabling live use. This provider path has no verified full live scan in this release.
-3. Supply your own paper/data key and secret through the local process environment as `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY`. Set `APCA_PERSONAL_USE=yes` after completing step 2. Do not add credentials or reports to GitHub. No trade endpoint is called.
-4. Run `python monitor.py private` after the market closes and the delayed feed is ready, or `python monitor.py private --latest` to select the most recent closed session. Run it with your operating system's scheduler at 6:30 p.m. Eastern for local automation. A scheduled local run requires the computer to be awake and online.
-5. Open **Private reports** on the dashboard and select one or more date-named JSON files from `.private/data/`. The site parses them in memory. The files and market-derived results stay on your device. Keep your browser watchlist on the browser profile where you use it.
+1. Create a **Stocks Basic ($0)** account with [Massive](https://massive.com/pricing?product=stocks) and copy your API key from its dashboard. Use the key on your own computer. Keep it out of chat and GitHub.
+2. Clone this repository. With Python 3.12 installed, run these commands in the project folder. The key prompt hides what you paste.
 
-Missing regular-session bars abort the scan. Do not change from delayed SIP to IEX silently because they represent different market coverage. Confirm symbol mappings if the provider rejects share classes.
+   ```bash
+   python3 -m venv .venv
+   .venv/bin/python -m pip install -r requirements.txt
+   .venv/bin/python -c 'import getpass, os, subprocess, sys; key = getpass.getpass("Massive API key: "); sys.exit(subprocess.call([sys.executable, "monitor.py", "private", "--provider", "massive", "--prices-only"], env={**os.environ, "MASSIVE_API_KEY": key}))'
+   ```
+
+3. The scan uses the most recent trading session available after midnight Eastern. It fetches split-adjusted daily summaries at the Basic plan's rate limit, so allow around an hour. The terminal prints up to ten matches and saves the full report under `.private/data/`.
+4. Click **Open a scan file** on the dashboard and choose the dated report. The browser reads it locally. The report stays on your device and clears when you reload.
+
+The first scan intentionally focuses on prices. To add company filings and financial facts, remove `--prices-only` and run again. Missing price bars stop the scan. The Massive adapter still needs live verification with an entitled key. [Basic plan timing](https://massive.com/knowledge-base/article/on-the-free-basic-plan-when-can-i-pull-the-previous-trading-days-data) · [Personal-use terms](https://massive.com/legal/market-data-terms-of-service)
+
+An existing Alpaca account entitled to delayed consolidated SIP history is also supported. Provide `APCA_API_KEY_ID`, `APCA_API_SECRET_KEY`, and `APCA_PERSONAL_USE=yes` in your local process environment and use `--provider alpaca --latest` in place of `--provider massive`. Alpaca documents IEX entitlement for paper-only accounts. Confirm SIP entitlement before choosing this option.
 
 ## Optional public SEC digest via Google Apps Script
 
