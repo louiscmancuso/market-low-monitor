@@ -2,7 +2,7 @@ name: Market Low Monitor
 on:
   push:
     branches: [main]
-    paths: [site/index.html, monitor.py, requirements.txt, .github/workflows/monitor.yml]
+    paths: [site/index.html, site/data/index.json, monitor.py, requirements.txt, .github/workflows/monitor.yml]
   workflow_dispatch:
     inputs:
       refresh:
